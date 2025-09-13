@@ -1,0 +1,84 @@
+// Part 2: JavaScript Functions — Scope, Parameters & Return Values
+// Global variable (minimal use to avoid pollution)
+let interactionCount = 0; // Tracks total interactions for logging
+
+// Function 1: Calculates animation duration based on input
+function calculateOrbitSpeed(speedInput) {
+    // Local scope: Only used here
+    let baseSpeed = 1; // Minimum speed in seconds
+    let totalSpeed = Math.max(1, Math.min(5, speedInput)); // Clamp between 1-5s
+    console.log(`Calculated orbit speed: ${totalSpeed}s`); // Debug
+    return totalSpeed; // Return for animation control
+}
+
+// Function 2: Reusable class toggler, returns success
+function toggleClass(elementId, className) {
+    let el = document.getElementById(elementId); // Local scope
+    if (!el) {
+        console.error(`Element ${elementId} not found`);
+        return false;
+    }
+    el.classList.toggle(className);
+    interactionCount++; // Update global
+    console.log(`Interaction #${interactionCount}: Toggled ${className}`);
+    return true;
+}
+
+// Function 3: Applies dynamic animation with parameters
+function applyAnimation(elementId, animationName, duration, iterations = 1) {
+    let el = document.getElementById(elementId); // Local
+    if (!el) return false;
+    
+    let animDuration = duration || calculateOrbitSpeed(3); // Fallback
+    el.style.animation = `${animationName} ${animDuration}s ${iterations}`; // Set CSS animation
+    el.classList.add(animationName);
+    return animDuration; // Return for chaining
+}
+
+// Function 4: Updates orb position to follow mouse (live movement)
+function followMouse(elementId, mouseX, mouseY) {
+    let el = document.getElementById(elementId);
+    if (!el) return false;
+    
+    // Remove orbiting to allow mouse-follow
+    el.classList.remove('orbit');
+    // Move to mouse position, offset to center orb
+    el.style.transform = `translate(${mouseX - 30}px, ${mouseY - 30}px)`; // Adjust for orb size
+    return true;
+}
+
+// Part 3: Combining CSS Animations with JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const orb = document.getElementById('cosmic-orb');
+    
+    // Pulse button: Triggers pulse animation
+    document.getElementById('pulse-btn').addEventListener('click', function() {
+        toggleClass('cosmic-orb', 'pulse'); // Triggers CSS pulse
+        // Remove pulse class after animation ends to allow repeat
+        setTimeout(() => {
+            orb.classList.remove('pulse');
+        }, 500); // Match pulse duration
+    });
+    
+    // Speed button: Changes orbit speed based on input
+    document.getElementById('speed-btn').addEventListener('click', function() {
+        let speedInput = parseInt(document.getElementById('speed-input').value) || 3;
+        let duration = calculateOrbitSpeed(speedInput); // Use function
+        orb.classList.remove('orbit'); // Reset
+        setTimeout(() => {
+            applyAnimation('cosmic-orb', 'orbit', duration, 'infinite'); // Reapply with new speed
+        }, 10); // Small delay to ensure reset
+    });
+    
+    // Mouse follow: Orb tracks cursor for live movement
+    document.addEventListener('mousemove', function(event) {
+        followMouse('cosmic-orb', event.clientX, event.clientY);
+    });
+    
+    // Click anywhere to toggle orbit back on
+    document.addEventListener('click', function(event) {
+        if (event.target.tagName !== 'BUTTON' && event.target.tagName !== 'INPUT') {
+            applyAnimation('cosmic-orb', 'orbit', calculateOrbitSpeed(3), 'infinite');
+        }
+    });
+});
